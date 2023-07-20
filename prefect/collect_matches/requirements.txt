@@ -8,4 +8,4 @@ pandas-gbq==0.18.1
 google-cloud-storage
 fsspec
 gcsfs
-
+pydantic==1.10.11

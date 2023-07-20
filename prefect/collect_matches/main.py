@@ -1,14 +1,11 @@
 import datetime as dt
 from typing import Optional, List, Dict, Any
 import itertools
-from concurrent.futures import ThreadPoolExecutor, wait
-import time
 import asyncio
 
 import pandas as pd
 
 from prefect import flow, task
-from prefect.task_runners import ConcurrentTaskRunner
 from prefect.deployments import run_deployment
 
 from google.cloud import bigquery
@@ -118,10 +115,13 @@ def match_infos(match_ids: list) -> pd.DataFrame:
     participants = []
 
     for i, match_id in enumerate(match_ids):
-        if i % 10 == 0:
-            print(f"[PROCESS MATCHES] {i}/{len(match_ids)} are done.")
-        data = utils.get_match_info(match_id)
-        participants.extend(utils.match_transform(data))
+        try:
+            if i % 10 == 0:
+                print(f"[PROCESS MATCHES] {i}/{len(match_ids)} are done.")
+            data = utils.get_match_info(match_id)
+            participants.extend(utils.match_transform(data))
+        except Exception as e:
+            print(f"Match Id: {match_id} - Error : {e}")
 
     return participants
 
@@ -203,23 +203,22 @@ def workflow(
     )
 
 
-def build_subflow(n: int) -> Any:
-    @flow(name=f"Deploy-Runnuer-{n}", log_prints=True)
-    def deploy_runner_wrapper(deploy_name: str, params: Dict[str, Any]) -> str:
-        print(f"{deploy_name} - {params} started...")
-
-        flow_run = run_deployment(
-            deploy_name,
-            parameters=params,
+async def build_subflow(n: int, deploy_name: str, params: Dict[str, Any]) -> str:
+    @flow(name=f"Deploy-Runner-{n}", log_prints=True)
+    async def deploy_runner_wrapper(deploy_name: str, params: Dict[str, Any]) -> str:
+        print(f"Deployment: {deploy_name} - Params: {params}")
+        flow_run = await run_deployment(
+            deploy_name, parameters=params, flow_run_name=f"Flow-{n}"
+        )
+        print(
+            f"Flow Status: {flow_run.state_name} - Took: {flow_run.total_run_time.total_seconds()}s"
         )
 
-        print(f"{flow_run.id} - {flow_run.total_run_time} - {flow_run.state_name}")
-
-    return deploy_runner_wrapper
+    await deploy_runner_wrapper(deploy_name, params)
 
 
 @flow(name="Main-Workflow", log_prints=True)
-def main_workflow(
+async def main_workflow(
     start_time: Optional[dt.datetime] = None,
     end_time: Optional[dt.datetime] = None,
     max_players: int = 100,
@@ -227,26 +226,29 @@ def main_workflow(
     tiers = ["SILVER", "GOLD", "PLATINUM", "DIAMOND"]
     divisions = ["I", "II", "III", "IV"]
 
-    with ThreadPoolExecutor(2) as exe:
-        jobs = []
-        for i, (division, tier) in enumerate(itertools.product(divisions, tiers)):
-            print(f"[Main-Workflow] {division}-{tier} Running...")
-            jobs.append(
-                exe.submit(
-                    build_subflow(i + 1),
-                    "Workflow/Collect-Matches",
-                    {
-                        "tier": tier,
-                        "division": division,
-                        "start_time": start_time,
-                        "end_time": end_time,
-                        "max_players": max_players,
-                    },
-                )
+    tasks = []
+    for i, (division, tier) in enumerate(itertools.product(divisions, tiers)):
+        print(f"[Main-Workflow] {division}-{tier} Running...")
+        tasks.append(
+            (
+                i + 1,
+                "Workflow/Collect-Matches",
+                {
+                    "tier": tier,
+                    "division": division,
+                    "start_time": start_time,
+                    "end_time": end_time,
+                    "max_players": max_players,
+                },
             )
+        )
 
-    for job in jobs:
-        job.result()
+        if len(tasks) >= 2:
+            print(
+                f"[Main-Workflow] Waiting for {len(tasks)} number of jobs to finish..."
+            )
+            await asyncio.gather(*[build_subflow(*task) for task in tasks])
+            tasks = []
 
 
 if __name__ == "__main__":
@@ -254,5 +256,5 @@ if __name__ == "__main__":
     tier = "GOLD"
     start_time = None
 
-    # workflow(division, tier, start_time)
-    main_workflow(max_players=1)
+    # workflow("I", "GOLD", max_players=1)
+    asyncio.run(main_workflow(max_players=3))
