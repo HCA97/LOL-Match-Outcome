@@ -1,0 +1,46 @@
+name: Deploy Infra
+
+
+on: 
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v1'
+        with:
+          credentials_json: '${{ secrets.gcp_sa_key }}'
+      - uses: hashicorp/setup-terraform@v2
+
+      - name: Terraform Plan
+        if: ${{ github.event }} == 'pull_request'
+        run: |- 
+          terraform init
+          terraform plan \
+            -var="project=${{ secrets.gcp_project }}" \
+            -var="prefect_key=${{ secrets.prefect_api_key  }}" \
+            -var="prefect_account_id=${{ secrets.prefect_account_id }}" \
+            -var="prefect_workspace_id=${{ secrets.prefect_workspace_id }}" 
+
+      - name: Terraform Apply
+        if: ${{ github.event }} == 'push'
+        run: |- 
+          terraform fmt --recursive
+          terraform init
+          terraform apply --auto-approve \
+            -var="project=${{ secrets.gcp_project }}" \
+            -var="prefect_key=${{ secrets.prefect_api_key  }}" \
+            -var="prefect_account_id=${{ secrets.prefect_account_id }}" \
+            -var="prefect_workspace_id=${{ secrets.prefect_workspace_id }}" 
+
+  prefect:
+    runs-on: ubuntu-latest

@@ -1,0 +1,25 @@
+name: Manually Deploy Prefect Blocks
+
+on: workflow_dispatch
+
+jobs:
+  deploy-prefect-blocks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9' 
+      - run: |-
+          cd prefect
+
+          pip install prefect==2.9.0 prefect-gcp[cloud_storage]==0.2.4
+
+          prefect cloud login -k ${{ secrets.prefect_api_key }}
+          
+          prefect block register -m prefect_gcp
+
+          cat ${{ secrets.gcp_sa_key }} >> /tmp/key.json
+
+          python blocks.py --sa_path /tmp/key.json --riot_api_key ${{ secrets.riot_api_key }}
+          
