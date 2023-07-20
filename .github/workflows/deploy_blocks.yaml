@@ -15,7 +15,7 @@ jobs:
 
           pip install prefect==2.9.0 prefect-gcp[cloud_storage]==0.2.4 pydantic==1.10.11
 
-          prefect cloud login -k ${{ secrets.prefect_api_key }}
+          prefect cloud login --key ${{ secrets.prefect_api_key }} --workspace ${{ secrets.prefect_workspace_id }}
           
           prefect block register -m prefect_gcp
 
