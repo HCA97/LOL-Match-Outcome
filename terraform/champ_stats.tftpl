@@ -1,0 +1,121 @@
+CREATE OR REPLACE TABLE FUNCTION `${project}.${dataset_id}.champ_stats`(start_data DATETIME, delta INT) AS
+
+WITH match_latest AS (
+    SELECT *
+    FROM `${project}.${dataset_id}.${table_name}` 
+    QUALIFY ROW_NUMBER() OVER (PARTITION BY matchId, teamPosition, teamId ORDER BY retrieveTime DESC) = 1 
+)
+ 
+
+-- Generated using Python
+SELECT cs.tier
+    ,  cs.mapSide
+    ,  cs.championName
+    ,  cs.position
+    ,  cs.totalMatches AS champTotalMatches
+    ,  cs.totalMatches / ls.totalMatches AS champPickRate
+    ,  cs.winRate
+    ,  cs.avgKda / (ls.avgKda + 1e-10) AS normalizeKda
+    ,  cs.avgKillparticipation / (ls.avgKillparticipation + 1e-10) AS normalizeKillparticipation
+    ,  cs.avgMultikills / (ls.avgMultikills + 1e-10) AS normalizeMultikills
+    ,  cs.avgTurretplatestaken / (ls.avgTurretplatestaken + 1e-10) AS normalizeTurretplatestaken
+    ,  cs.avgVisionscoreadvantagelaneopponent / (ls.avgVisionscoreadvantagelaneopponent + 1e-10) AS normalizeVisionscoreadvantagelaneopponent
+    ,  cs.avgVisionscoreperminute / (ls.avgVisionscoreperminute + 1e-10) AS normalizeVisionscoreperminute
+    ,  cs.avgTeamdamagepercentage / (ls.avgTeamdamagepercentage + 1e-10) AS normalizeTeamdamagepercentage
+    ,  cs.avgControlwardsplaced / (ls.avgControlwardsplaced + 1e-10) AS normalizeControlwardsplaced
+    ,  cs.avgGoldperminute / (ls.avgGoldperminute + 1e-10) AS normalizeGoldperminute
+    ,  cs.avgAssistmepings / (ls.avgAssistmepings + 1e-10) AS normalizeAssistmepings
+    ,  cs.avgDangerpings / (ls.avgDangerpings + 1e-10) AS normalizeDangerpings
+    ,  cs.avgOnmywaypings / (ls.avgOnmywaypings + 1e-10) AS normalizeOnmywaypings
+    ,  cs.avgDeaths / (ls.avgDeaths + 1e-10) AS normalizeDeaths
+    ,  cs.avgKills / (ls.avgKills + 1e-10) AS normalizeKills
+    ,  cs.avgLargestkillingspree / (ls.avgLargestkillingspree + 1e-10) AS normalizeLargestkillingspree
+    ,  cs.avgPentakills / (ls.avgPentakills + 1e-10) AS normalizePentakills
+    ,  cs.avgQuadrakills / (ls.avgQuadrakills + 1e-10) AS normalizeQuadrakills
+    ,  cs.avgTriplekills / (ls.avgTriplekills + 1e-10) AS normalizeTriplekills
+    ,  cs.avgTotaldamagedealttochampions / (ls.avgTotaldamagedealttochampions + 1e-10) AS normalizeTotaldamagedealttochampions
+    ,  cs.avgTotaldamagetaken / (ls.avgTotaldamagetaken + 1e-10) AS normalizeTotaldamagetaken
+    ,  cs.avgTotalheal / (ls.avgTotalheal + 1e-10) AS normalizeTotalheal
+    ,  cs.avgTotalhealsonteammates / (ls.avgTotalhealsonteammates + 1e-10) AS normalizeTotalhealsonteammates
+    ,  cs.avgTotaltimeccdealt / (ls.avgTotaltimeccdealt + 1e-10) AS normalizeTotaltimeccdealt
+    ,  cs.avgVisionscore / (ls.avgVisionscore + 1e-10) AS normalizeVisionscore
+    ,  cs.avgWardsplaced / (ls.avgWardsplaced + 1e-10) AS normalizeWardsplaced
+    ,  cs.avgVisionwardsboughtingame / (ls.avgVisionwardsboughtingame + 1e-10) AS normalizeVisionwardsboughtingame
+    ,  cs.avgGoldearned / (ls.avgGoldearned + 1e-10) AS normalizeGoldearned
+FROM (
+    SELECT tier
+        ,  IF(teamId = 100, 'BLUE', 'RED') AS mapSide
+        ,  championName
+        ,  teamPosition AS position
+        ,  SUM(1) AS totalMatches
+        ,  SUM(CAST(win AS INT)) / SUM(1) AS winRate
+        ,  SUM(CAST(firstBloodKill AS INT)) / SUM(1) AS firstBloodKillRate
+        ,  SUM(CAST(firstBloodAssist AS INT)) / SUM(1) AS firstBloodAssistRate
+        ,  AVG(kda) AS avgKda
+        ,  AVG(killParticipation) AS avgKillparticipation
+        ,  AVG(multikills) AS avgMultikills
+        ,  AVG(turretPlatesTaken) AS avgTurretplatestaken
+        ,  AVG(visionScoreAdvantageLaneOpponent) AS avgVisionscoreadvantagelaneopponent
+        ,  AVG(visionScorePerMinute) AS avgVisionscoreperminute
+        ,  AVG(teamDamagePercentage) AS avgTeamdamagepercentage
+        ,  AVG(controlWardsPlaced) AS avgControlwardsplaced
+        ,  AVG(goldPerMinute) AS avgGoldperminute
+        ,  AVG(assistMePings) AS avgAssistmepings
+        ,  AVG(dangerPings) AS avgDangerpings
+        ,  AVG(onMyWayPings) AS avgOnmywaypings
+        ,  AVG(deaths) AS avgDeaths
+        ,  AVG(kills) AS avgKills
+        ,  AVG(largestKillingSpree) AS avgLargestkillingspree
+        ,  AVG(pentaKills) AS avgPentakills
+        ,  AVG(quadraKills) AS avgQuadrakills
+        ,  AVG(tripleKills) AS avgTriplekills
+        ,  AVG(totalDamageDealtToChampions) AS avgTotaldamagedealttochampions
+        ,  AVG(totalDamageTaken) AS avgTotaldamagetaken
+        ,  AVG(totalHeal) AS avgTotalheal
+        ,  AVG(totalHealsOnTeammates) AS avgTotalhealsonteammates
+        ,  AVG(totalTimeCCDealt) AS avgTotaltimeccdealt
+        ,  AVG(visionScore) AS avgVisionscore
+        ,  AVG(wardsPlaced) AS avgWardsplaced
+        ,  AVG(visionWardsBoughtInGame) AS avgVisionwardsboughtingame
+        ,  AVG(goldEarned) AS avgGoldearned
+    FROM match_latest
+    WHERE gameStartTime BETWEEN DATETIME_SUB(start_data, INTERVAL delta DAY) AND start_data
+    GROUP BY tier, championName, teamPosition, teamId
+) as cs
+JOIN (
+    SELECT tier
+        ,  SUM(1)/10 AS totalMatches
+        ,  SUM(CAST(firstBloodKill AS INT)) / SUM(1) AS firstBloodKillRate
+        ,  SUM(CAST(firstBloodAssist AS INT)) / SUM(1) AS firstBloodAssistRate
+        ,  AVG(kda) AS avgKda
+        ,  AVG(killParticipation) AS avgKillparticipation
+        ,  AVG(multikills) AS avgMultikills
+        ,  AVG(turretPlatesTaken) AS avgTurretplatestaken
+        ,  AVG(visionScoreAdvantageLaneOpponent) AS avgVisionscoreadvantagelaneopponent
+        ,  AVG(visionScorePerMinute) AS avgVisionscoreperminute
+        ,  AVG(teamDamagePercentage) AS avgTeamdamagepercentage
+        ,  AVG(controlWardsPlaced) AS avgControlwardsplaced
+        ,  AVG(goldPerMinute) AS avgGoldperminute
+        ,  AVG(assistMePings) AS avgAssistmepings
+        ,  AVG(dangerPings) AS avgDangerpings
+        ,  AVG(onMyWayPings) AS avgOnmywaypings
+        ,  AVG(deaths) AS avgDeaths
+        ,  AVG(kills) AS avgKills
+        ,  AVG(largestKillingSpree) AS avgLargestkillingspree
+        ,  AVG(pentaKills) AS avgPentakills
+        ,  AVG(quadraKills) AS avgQuadrakills
+        ,  AVG(tripleKills) AS avgTriplekills
+        ,  AVG(totalDamageDealtToChampions) AS avgTotaldamagedealttochampions
+        ,  AVG(totalDamageTaken) AS avgTotaldamagetaken
+        ,  AVG(totalHeal) AS avgTotalheal
+        ,  AVG(totalHealsOnTeammates) AS avgTotalhealsonteammates
+        ,  AVG(totalTimeCCDealt) AS avgTotaltimeccdealt
+        ,  AVG(visionScore) AS avgVisionscore
+        ,  AVG(wardsPlaced) AS avgWardsplaced
+        ,  AVG(visionWardsBoughtInGame) AS avgVisionwardsboughtingame
+        ,  AVG(goldEarned) AS avgGoldearned
+    FROM match_latest
+    WHERE gameStartTime BETWEEN DATETIME_SUB(start_data, INTERVAL delta DAY) AND start_data
+    GROUP BY tier
+) as ls
+ON cs.tier = ls.tier;

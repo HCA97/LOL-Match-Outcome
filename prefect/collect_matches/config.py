@@ -59,7 +59,6 @@ PARTICIPANT_INFO = [
     "visionScore",
     "wardsPlaced",
     "visionWardsBoughtInGame",
-    "lane",
     "goldEarned",
     "championName",
     "win",

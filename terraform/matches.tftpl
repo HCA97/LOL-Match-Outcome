@@ -1,0 +1,50 @@
+CREATE OR REPLACE TABLE FUNCTION `${project}.${dataset_id}.matches`(start_date DATETIME, end_date DATETIME) AS
+
+WITH blue_team AS (
+  SELECT ANY_VALUE(win) as win
+      , matchId
+      , ARRAY_AGG(
+        STRUCT(
+          teamPosition as lane,
+          championName as champ
+        )
+      ) AS blue_team
+  FROM `${project}.${dataset_id}.${table_name}` 
+  WHERE gameStartTime BETWEEN start_date AND end_date
+    AND teamId = 100
+  GROUP BY matchId, retrieveTime
+  QUALIFY ROW_NUMBER() OVER (PARTITION BY matchId ORDER BY retrieveTime DESC) = 1 
+), red_team AS (
+  SELECT ANY_VALUE(win) as win
+      , matchId
+      , ARRAY_AGG(
+        STRUCT(
+          teamPosition as lane,
+          championName as champ
+        )
+      ) AS red_team
+  FROM `${project}.${dataset_id}.${table_name}` 
+  WHERE gameStartTime BETWEEN start_date AND end_date
+    AND teamId = 200
+  GROUP BY matchId, retrieveTime
+  QUALIFY ROW_NUMBER() OVER (PARTITION BY matchId ORDER BY retrieveTime DESC) = 1
+), other_info AS (
+  SELECT tier as tier
+       , EXTRACT(HOUR FROM gameStartTime) AS dayHour
+       , EXTRACT(DAYOFWEEK FROM gameStartTime) AS weekDay
+       , matchId
+  FROM `${project}.${dataset_id}.${table_name}` 
+  WHERE gameStartTime BETWEEN start_date AND end_date
+  QUALIFY ROW_NUMBER() OVER (PARTITION BY matchId ORDER BY retrieveTime DESC) = 1
+)
+
+SELECT b.blue_team AS blue_team
+     , r.red_team AS red_team
+     , IF(r.win, 'RED', 'BLUE') AS winner
+     , o.tier
+     , o.dayHour
+     , o.weekDay
+FROM blue_team AS b
+JOIN red_team AS r ON b.matchId = r.matchId
+JOIN other_info AS o ON b.matchId = o.matchId
+
