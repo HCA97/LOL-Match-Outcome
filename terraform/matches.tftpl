@@ -1,6 +1,17 @@
 CREATE OR REPLACE TABLE FUNCTION `${project}.${dataset_id}.matches`(start_date DATETIME, end_date DATETIME) AS
 
-WITH blue_team AS (
+WITH match_latest AS (
+    SELECT matchId
+        ,  win
+        ,  teamPosition
+        ,  championName
+        ,  tier
+        ,  gameStartTime
+        ,  teamId
+    FROM `${project}.${dataset_id}.${table_name}` 
+    WHERE gameStartTime BETWEEN start_date AND end_date
+    QUALIFY ROW_NUMBER() OVER (PARTITION BY matchId, teamPosition, teamId ORDER BY retrieveTime DESC) = 1 
+), blue_team AS (
   SELECT ANY_VALUE(win) as win
       , matchId
       , ARRAY_AGG(
@@ -9,11 +20,9 @@ WITH blue_team AS (
           championName as champ
         )
       ) AS blue_team
-  FROM `${project}.${dataset_id}.${table_name}` 
-  WHERE gameStartTime BETWEEN start_date AND end_date
-    AND teamId = 100
-  GROUP BY matchId, retrieveTime
-  QUALIFY ROW_NUMBER() OVER (PARTITION BY matchId ORDER BY retrieveTime DESC) = 1 
+  FROM match_latest
+  WHERE teamId = 100
+  GROUP BY matchId
 ), red_team AS (
   SELECT ANY_VALUE(win) as win
       , matchId
@@ -23,23 +32,29 @@ WITH blue_team AS (
           championName as champ
         )
       ) AS red_team
-  FROM `${project}.${dataset_id}.${table_name}` 
-  WHERE gameStartTime BETWEEN start_date AND end_date
-    AND teamId = 200
-  GROUP BY matchId, retrieveTime
-  QUALIFY ROW_NUMBER() OVER (PARTITION BY matchId ORDER BY retrieveTime DESC) = 1
+  FROM match_latest
+  WHERE teamId = 200
+  GROUP BY matchId
 ), other_info AS (
-  SELECT tier as tier
-       , EXTRACT(HOUR FROM gameStartTime) AS dayHour
-       , EXTRACT(DAYOFWEEK FROM gameStartTime) AS weekDay
+  SELECT ANY_VALUE(tier) as tier
+       , ANY_VALUE(EXTRACT(HOUR FROM gameStartTime)) AS dayHour
+       , ANY_VALUE(EXTRACT(DAYOFWEEK FROM gameStartTime))AS weekDay
        , matchId
-  FROM `${project}.${dataset_id}.${table_name}` 
-  WHERE gameStartTime BETWEEN start_date AND end_date
-  QUALIFY ROW_NUMBER() OVER (PARTITION BY matchId ORDER BY retrieveTime DESC) = 1
+  FROM match_latest 
+  GROUP BY matchId
 )
 
-SELECT b.blue_team AS blue_team
-     , r.red_team AS red_team
+SELECT 
+      ARRAY(SELECT champ FROM UNNEST(b.blue_team) WHERE lane="TOP")[SAFE_OFFSET(0)] AS blue_team_top
+    , ARRAY(SELECT champ FROM UNNEST(b.blue_team) WHERE lane="JUNGLE")[SAFE_OFFSET(0)]  AS blue_team_jg
+    ,  ARRAY(SELECT champ FROM UNNEST(b.blue_team) WHERE lane="MIDDLE")[SAFE_OFFSET(0)]  AS blue_team_mid
+    ,  ARRAY(SELECT champ FROM UNNEST(b.blue_team) WHERE lane="BOTTOM")[SAFE_OFFSET(0)]  AS blue_team_bot
+    ,  ARRAY(SELECT champ FROM UNNEST(b.blue_team) WHERE lane="UTILITY")[SAFE_OFFSET(0)]  AS blue_team_sup
+    ,  ARRAY(SELECT champ FROM UNNEST(r.red_team) WHERE lane="TOP")[SAFE_OFFSET(0)]  AS red_team_top
+    ,  ARRAY(SELECT champ FROM UNNEST(r.red_team) WHERE lane="JUNGLE")[SAFE_OFFSET(0)]  AS red_team_jg
+    , ARRAY(SELECT champ FROM UNNEST(r.red_team) WHERE lane="MIDDLE")[SAFE_OFFSET(0)]  AS red_team_mid
+    ,  ARRAY(SELECT champ FROM UNNEST(r.red_team) WHERE lane="BOTTOM")[SAFE_OFFSET(0)]  AS red_team_bot
+    , ARRAY(SELECT champ FROM UNNEST(r.red_team) WHERE lane="UTILITY")[SAFE_OFFSET(0)]  AS red_team_sup
      , IF(r.win, 'RED', 'BLUE') AS winner
      , o.tier
      , o.dayHour

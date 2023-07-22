@@ -1,8 +1,9 @@
-CREATE OR REPLACE TABLE FUNCTION `${project}.${dataset_id}.champ_stats`(start_data DATETIME, delta INT) AS
+CREATE OR REPLACE TABLE FUNCTION `${project}.${dataset_id}.champ_stats`(start_date DATETIME, end_date DATETIME) AS
 
 WITH match_latest AS (
     SELECT *
     FROM `${project}.${dataset_id}.${table_name}` 
+    WHERE gameStartTime BETWEEN start_date AND end_date
     QUALIFY ROW_NUMBER() OVER (PARTITION BY matchId, teamPosition, teamId ORDER BY retrieveTime DESC) = 1 
 )
  
@@ -79,7 +80,6 @@ FROM (
         ,  AVG(visionWardsBoughtInGame) AS avgVisionwardsboughtingame
         ,  AVG(goldEarned) AS avgGoldearned
     FROM match_latest
-    WHERE gameStartTime BETWEEN DATETIME_SUB(start_data, INTERVAL delta DAY) AND start_data
     GROUP BY tier, championName, teamPosition, teamId
 ) as cs
 JOIN (
@@ -115,7 +115,6 @@ JOIN (
         ,  AVG(visionWardsBoughtInGame) AS avgVisionwardsboughtingame
         ,  AVG(goldEarned) AS avgGoldearned
     FROM match_latest
-    WHERE gameStartTime BETWEEN DATETIME_SUB(start_data, INTERVAL delta DAY) AND start_data
     GROUP BY tier
 ) as ls
 ON cs.tier = ls.tier;
