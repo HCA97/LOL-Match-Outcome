@@ -23,4 +23,4 @@ pip install \
 export PREFECT_API_KEY="${prefect_key}"
 export PREFECT_API_URL="https://api.prefect.cloud/api/accounts/${prefect_account_id}/workspaces/${prefect_workspace_id}"
 export PREFECT_PROFILE="default"
-prefect agent start -p default-agent-pool --limit 2
+prefect agent start --pool default-agent-pool --work-queue match-predictor 

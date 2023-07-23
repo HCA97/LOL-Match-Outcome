@@ -148,15 +148,16 @@ resource "google_bigquery_dataset" "datawarehouse" {
 
 
 locals {
+  table_name = "matches"
   champ_stats_query = templatefile("${path.module}/champ_stats.tftpl", {
     project    = var.project
     dataset_id = google_bigquery_dataset.datawarehouse.dataset_id
-    table_name = "matches_test"
+    table_name = local.table_name
   })
   matches_query = templatefile("${path.module}/matches.tftpl", {
     project    = var.project
     dataset_id = google_bigquery_dataset.datawarehouse.dataset_id
-    table_name = "matches_test"
+    table_name = local.table_name
   })
 }
 
