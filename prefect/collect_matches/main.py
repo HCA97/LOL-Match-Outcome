@@ -193,11 +193,11 @@ def workflow(
     # upload to bq
     upload_to_bq(
         matches,
-        "matches_test",
+        "matches",
         partitioning_field="gameStartTime",
         partitioning_type="DAY",
         clustering_fields=[
-            "lane",
+            "teamPosition",
             "division",
         ],
     )
