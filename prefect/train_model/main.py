@@ -11,7 +11,6 @@ from prefect_gcp import GcpCredentials
 from sklearn.model_selection import train_test_split
 
 import config as cfg
-import utils
 
 
 @task(log_prints=True)
@@ -99,9 +98,7 @@ def add_champ_statistics(
 @task(log_prints=True)
 def upload_data(data: pd.DataFrame, save_path: str) -> str:
     save_path = f"train_model/data/{save_path}"
-    bucket = GcsBucket(
-        bucket=cfg.DATA_LAKE, gcp_credentials=GcpCredentials.load(cfg.GCP_CRED_BLOCK)
-    )
+    bucket = GcsBucket(bucket=cfg.DATA_LAKE)
 
     bucket.upload_from_dataframe(data, save_path)
 
@@ -139,11 +136,11 @@ def main(
 
     train_path = upload_data.submit(
         data_train,
-        f'{start_time.strftime("%m-%d-%Y_%H:%M:%S")}-{end_time.strftime("%m-%d-%Y_%H:%M:%S")}-train.parquet',
+        f'{start_time.strftime("%m-%d-%Y")}-{end_time.strftime("%m-%d-%Y")}-train.parquet',
     )
     test_path = upload_data.submit(
         data_test,
-        f'{start_time.strftime("%m-%d-%Y_%H:%M:%S")}-{end_time.strftime("%m-%d-%Y_%H:%M:%S")}-test.parquet',
+        f'{start_time.strftime("%m-%d-%Y")}-{end_time.strftime("%m-%d-%Y")}-test.parquet',
     )
 
     status = start_training.submit(train_path, test_path)
