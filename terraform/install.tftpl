@@ -8,19 +8,26 @@ conda config --set auto_activate_base true
 conda update conda -y
 conda install python=3.9 -y
 pip install \
+    scikit-learn \
     requests \
     pandas==1.5.2 \
-    prefect==2.9.0 \
-    prefect-gcp[cloud_storage]==0.2.4 \
+    prefect==2.11.0 \
+    prefect-gcp==0.4.5 \
     protobuf==4.21.11 \
     pyarrow==10.0.1 \
     pandas-gbq==0.18.1 \
     google-cloud-storage \
     fsspec \
+    gcsfs \
     pydantic==1.10.11 \
-    gcsfs
+    beautifulsoup4 \
+    matplotlib \
+    plotly \
+    wandb \
+    numpy 
 
 export PREFECT_API_KEY="${prefect_key}"
 export PREFECT_API_URL="https://api.prefect.cloud/api/accounts/${prefect_account_id}/workspaces/${prefect_workspace_id}"
 export PREFECT_PROFILE="default"
-prefect agent start -p default-agent-pool --limit 2
+export WANDB_API_KEY="${wandb_key}"
+prefect agent start --pool default-agent-pool --work-queue match-predictor 
