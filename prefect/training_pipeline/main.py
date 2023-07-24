@@ -102,7 +102,7 @@ def upload_data(data: pd.DataFrame, save_path: str) -> str:
 
     bucket.upload_from_dataframe(data, save_path)
 
-    return save_path
+    return f"gs://{cfg.DATA_LAKE}/{save_path}"
 
 
 @flow(name="Start-Training", log_prints=True)
@@ -112,8 +112,8 @@ def start_training(train_path: str, test_path: str):
         parameters={
             "train_path": train_path,
             "test_path": test_path,
-            "wandb_entity": cfg.WANDB_ENTITY,
             "wandb_project": cfg.WANDB_PROJECT,
+            "wandb_entity": cfg.WANDB_ENTITY,
         },
         flow_run_name=f"Train-Model",
     )
@@ -144,7 +144,7 @@ def main(
 
     upload_data.submit(
         champs_stats_df,
-        f'{start_time.strftime("%m-%d-%Y")}-{end_time.strftime("%m-%d-%Y")}/champ_stats.parquet',
+        f'{start_time.strftime("%m-%d-%Y")}-{end_time.strftime("%m-%d-%Y")}/champ_stats.csv.gz',
     )
 
     data = add_champ_statistics.submit(matches_df, champs_stats_df)
@@ -153,11 +153,11 @@ def main(
 
     train_path = upload_data.submit(
         data_train,
-        f'{start_time.strftime("%m-%d-%Y")}-{end_time.strftime("%m-%d-%Y")}/train.parquet',
+        f'{start_time.strftime("%m-%d-%Y")}-{end_time.strftime("%m-%d-%Y")}/train.csv.gz',
     ).result()
     test_path = upload_data.submit(
         data_test,
-        f'{start_time.strftime("%m-%d-%Y")}-{end_time.strftime("%m-%d-%Y")}/test.parquet',
+        f'{start_time.strftime("%m-%d-%Y")}-{end_time.strftime("%m-%d-%Y")}/test.csv.gz',
     ).result()
 
     start_training(train_path, test_path)
