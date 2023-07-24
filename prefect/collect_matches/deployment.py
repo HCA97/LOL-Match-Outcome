@@ -25,7 +25,6 @@ gcs_deployment_main_workflow = Deployment.build_from_flow(
     path="collect_matches",
     entrypoint="main.py:main_workflow",
     parameters={"max_players": 100},
-    schedule=(CronSchedule(cron="0 0 * * *", timezone="UTC")),
 )
 
 if __name__ == "__main__":

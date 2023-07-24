@@ -70,7 +70,7 @@ def add_puuid(players: List[dict]) -> List[dict]:
     return new_players
 
 
-@task(name="Upload-To-BQ", log_prints=True)
+@task(name="Upload-To-BQ", log_prints=True, retries=3)
 def upload_to_bq(
     data: List[dict],
     table_name: str,
@@ -78,22 +78,30 @@ def upload_to_bq(
     partitioning_type: str = "DAY",
     clustering_fields: Optional[list] = None,
 ) -> None:
-    client = bigquery.Client(
-        project=cfg.CREDENTIALS.project_id, credentials=cfg.CREDENTIALS
-    )
-    job_config = bigquery.LoadJobConfig(
-        write_disposition="WRITE_APPEND",
-        time_partitioning=bigquery.table.TimePartitioning(
-            type_=partitioning_type, field=partitioning_field
-        ),
-        clustering_fields=clustering_fields,
-    )
+    try:
+        df = pd.DataFrame(data)
+        client = bigquery.Client(
+            project=cfg.CREDENTIALS.project_id, credentials=cfg.CREDENTIALS
+        )
+        job_config = bigquery.LoadJobConfig(
+            write_disposition="WRITE_APPEND",
+            time_partitioning=bigquery.table.TimePartitioning(
+                type_=partitioning_type, field=partitioning_field
+            ),
+            clustering_fields=clustering_fields,
+        )
 
-    table_id = f"{cfg.TABLE_ID}.{table_name}"
-    job = client.load_table_from_dataframe(
-        pd.DataFrame(data), table_id, job_config=job_config
-    )  # Make an API request
-    job.result()  # Wait for job to finish
+        table_id = f"{cfg.TABLE_ID}.{table_name}"
+        job = client.load_table_from_dataframe(
+            df, table_id, job_config=job_config
+        )  # Make an API request
+        job.result()  # Wait for job to finish
+    except Exception as e:
+        print(f"Error {e}")
+        print(f"Dataframe columns: {list(df.columns)}")
+
+        table = client.get_table(table_id)
+        print(f"Table schema: {table.schema}")
 
 
 @task(name="Match-History", log_prints=True)
