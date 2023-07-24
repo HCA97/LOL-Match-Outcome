@@ -97,11 +97,11 @@ def upload_to_bq(
         )  # Make an API request
         job.result()  # Wait for job to finish
     except Exception as e:
-        print(f"Error {e}")
-        print(f"Dataframe columns: {list(df.columns)}")
+        print(f"[Upload to BQ] Error: {e}")
+        print(f"[Upload to BQ] Dataframe columns: {list(df.columns)}")
 
         table = client.get_table(table_id)
-        print(f"Table schema: {table.schema}")
+        print(f"[Upload to BQ] Table schema: {table.schema}")
 
 
 @task(name="Match-History", log_prints=True)
