@@ -1,10 +1,10 @@
 import datetime as dt
 from typing import Tuple
-import asyncio
 
 import pandas as pd
 
 from prefect import flow, task
+from prefect.flows import FlowRun
 from prefect.deployments import run_deployment
 from prefect_gcp.cloud_storage import GcsBucket
 
@@ -105,19 +105,17 @@ def upload_data(data: pd.DataFrame, save_path: str) -> str:
     return save_path
 
 
-@task(log_prints=True)
-def log_champ_stats(data: pd.DataFrame):
-    pass
-
-
 @flow(name="Start-Training", log_prints=True)
 def start_training(train_path: str, test_path: str):
-    flow_run = asyncio.run(
-        run_deployment(
-            "Train-Classifier/Train-Model",
-            parameters={"train_path": train_path, "test_path": test_path},
-            flow_run_name=f"Train-Model",
-        )
+    flow_run: FlowRun = run_deployment(
+        name="Train-Classifier/Train-Model",
+        parameters={
+            "train_path": train_path,
+            "test_path": test_path,
+            "wandb_entity": cfg.WANDB_ENTITY,
+            "wandb_project": cfg.WANDB_PROJECT,
+        },
+        flow_run_name=f"Train-Model",
     )
     print(
         f"Flow Status: {flow_run.state_name} - Took: {flow_run.total_run_time.total_seconds()}s"
@@ -144,7 +142,10 @@ def main(
     matches_df = load_matches.submit(start_time, end_time)
     champs_stats_df = load_champ_stats.submit(start_time, end_time)
 
-    log_champ_stats.submit(champs_stats_df)
+    upload_data.submit(
+        champs_stats_df,
+        f'{start_time.strftime("%m-%d-%Y")}-{end_time.strftime("%m-%d-%Y")}/champ_stats.parquet',
+    )
 
     data = add_champ_statistics.submit(matches_df, champs_stats_df)
 

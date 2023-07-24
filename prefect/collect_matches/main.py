@@ -184,6 +184,11 @@ def workflow(
     if end_time is None:
         end_time = dt.datetime.utcnow()
 
+    if start_time > end_time:
+        tmp = start_time
+        start_time = end_time
+        end_time = tmp
+
     matches = collect_matches(puuids, start_time, end_time)
 
     for match in matches:

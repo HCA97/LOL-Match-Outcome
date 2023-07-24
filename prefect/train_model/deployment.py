@@ -15,7 +15,7 @@ gcs_deployment_tain_model = Deployment.build_from_flow(
     work_queue_name="match-predictor",
     storage=gcs_block,
     path="train_model",
-    entrypoint="main.py:main",
+    entrypoint="main.py:train_classifier",
 )
 
 
