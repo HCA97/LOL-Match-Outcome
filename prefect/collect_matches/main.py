@@ -9,7 +9,7 @@ from prefect import flow, task
 from prefect.deployments import run_deployment
 
 from google.cloud import bigquery
-
+from google.api_core.exceptions import BadRequest
 import config as cfg
 import utils
 
@@ -70,7 +70,7 @@ def add_puuid(players: List[dict]) -> List[dict]:
     return new_players
 
 
-@task(name="Upload-To-BQ", log_prints=True, retries=3)
+@task(name="Upload-To-BQ", log_prints=True)
 def upload_to_bq(
     data: List[dict],
     table_name: str,
@@ -79,6 +79,10 @@ def upload_to_bq(
     clustering_fields: Optional[list] = None,
 ) -> None:
     try:
+        if not data:
+            print("[Upload to BQ] Data is empty.")
+            return
+
         df = pd.DataFrame(data)
         client = bigquery.Client(
             project=cfg.CREDENTIALS.project_id, credentials=cfg.CREDENTIALS
@@ -96,12 +100,13 @@ def upload_to_bq(
             df, table_id, job_config=job_config
         )  # Make an API request
         job.result()  # Wait for job to finish
-    except Exception as e:
+    except BadRequest as e:
         print(f"[Upload to BQ] Error: {e}")
         print(f"[Upload to BQ] Dataframe columns: {list(df.columns)}")
 
         table = client.get_table(table_id)
         print(f"[Upload to BQ] Table schema: {table.schema}")
+        raise e
 
 
 @task(name="Match-History", log_prints=True)
