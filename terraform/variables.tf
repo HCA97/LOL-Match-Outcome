@@ -27,4 +27,8 @@ variable "prefect_workspace_id" {
   sensitive   = true
 }
 
-
+variable "wandb_key" {
+  description = "weight and bais api key"
+  type        = string
+  sensitive   = true
+}

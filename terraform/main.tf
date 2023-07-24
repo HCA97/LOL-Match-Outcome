@@ -84,7 +84,8 @@ resource "google_compute_instance" "prefect" {
   metadata_startup_script = templatefile("${path.module}/install.tftpl", {
     prefect_key          = var.prefect_key
     prefect_account_id   = var.prefect_account_id
-    prefect_workspace_id = var.prefect_workspace_id
+    prefect_workspace_id = var.prefect_workspace_id,
+    wandb_key            = var.wandb_key
   })
 
   boot_disk {
@@ -135,8 +136,58 @@ resource "google_storage_bucket" "prefect-bucket" {
   force_destroy = true
 }
 
+#
+# BIGQUERY
+#
+
 resource "google_bigquery_dataset" "datawarehouse" {
   dataset_id = "datawarehouse"
   project    = var.project
   location   = var.region
 }
+
+
+
+locals {
+  table_name = "matches"
+  champ_stats_query = templatefile("${path.module}/champ_stats.tftpl", {
+    project    = var.project
+    dataset_id = google_bigquery_dataset.datawarehouse.dataset_id
+    table_name = local.table_name
+  })
+  matches_query = templatefile("${path.module}/matches.tftpl", {
+    project    = var.project
+    dataset_id = google_bigquery_dataset.datawarehouse.dataset_id
+    table_name = local.table_name
+  })
+}
+
+resource "google_bigquery_job" "champ_stats" {
+  job_id   = "champ_stats_query-${md5(local.champ_stats_query)}"
+  project  = google_bigquery_dataset.datawarehouse.project
+  location = google_bigquery_dataset.datawarehouse.location
+
+
+  query {
+    query              = local.champ_stats_query
+    create_disposition = ""
+    write_disposition  = ""
+    use_query_cache    = true
+  }
+}
+
+
+resource "google_bigquery_job" "matches" {
+  job_id   = "matches_query-${md5(local.matches_query)}"
+  project  = google_bigquery_dataset.datawarehouse.project
+  location = google_bigquery_dataset.datawarehouse.location
+
+
+  query {
+    query              = local.matches_query
+    create_disposition = ""
+    write_disposition  = ""
+    use_query_cache    = true
+  }
+}
+
