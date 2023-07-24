@@ -84,7 +84,8 @@ resource "google_compute_instance" "prefect" {
   metadata_startup_script = templatefile("${path.module}/install.tftpl", {
     prefect_key          = var.prefect_key
     prefect_account_id   = var.prefect_account_id
-    prefect_workspace_id = var.prefect_workspace_id
+    prefect_workspace_id = var.prefect_workspace_id,
+    wandb_key            = var.wandb_key
   })
 
   boot_disk {

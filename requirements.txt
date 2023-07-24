@@ -10,3 +10,8 @@ google-cloud-storage
 fsspec
 gcsfs
 pydantic==1.10.11
+beautifulsoup4
+matplotlib
+plotly
+wandb
+numpy

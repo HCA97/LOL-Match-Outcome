@@ -13,7 +13,7 @@ gcs_deployment_workflow = Deployment.build_from_flow(
     work_queue_name="match-predictor",
     storage=gcs_block,
     path="collect_matches",
-    entrypoint="collect_matches/main.py:workflow",
+    entrypoint="main.py:workflow",
     parameters={"max_players": 1, "tier": "GOLD", "division": "I"},
 )
 
@@ -23,7 +23,7 @@ gcs_deployment_main_workflow = Deployment.build_from_flow(
     work_queue_name="match-predictor",
     storage=gcs_block,
     path="collect_matches",
-    entrypoint="collect_matches/main.py:main_workflow",
+    entrypoint="main.py:main_workflow",
     parameters={"max_players": 100},
     schedule=(CronSchedule(cron="0 0 * * *", timezone="UTC")),
 )

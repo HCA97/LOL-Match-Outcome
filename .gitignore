@@ -1,6 +1,9 @@
 .terraform
 *.hcl
 wandb
+data
+models
+artifacts
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
