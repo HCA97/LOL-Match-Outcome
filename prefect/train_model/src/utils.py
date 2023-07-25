@@ -45,3 +45,4 @@ def clean_up():
     shutil.rmtree("data", ignore_errors=True)
     shutil.rmtree("models", ignore_errors=True)
     shutil.rmtree("artifacts", ignore_errors=True)
+    shutil.rmtree("wandb", ignore_errors=True)

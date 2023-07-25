@@ -9,7 +9,7 @@ from prefect import flow, task
 from prefect.deployments import run_deployment
 
 from google.cloud import bigquery
-
+from google.api_core.exceptions import BadRequest
 import config as cfg
 import utils
 
@@ -78,22 +78,35 @@ def upload_to_bq(
     partitioning_type: str = "DAY",
     clustering_fields: Optional[list] = None,
 ) -> None:
-    client = bigquery.Client(
-        project=cfg.CREDENTIALS.project_id, credentials=cfg.CREDENTIALS
-    )
-    job_config = bigquery.LoadJobConfig(
-        write_disposition="WRITE_APPEND",
-        time_partitioning=bigquery.table.TimePartitioning(
-            type_=partitioning_type, field=partitioning_field
-        ),
-        clustering_fields=clustering_fields,
-    )
+    try:
+        if not data:
+            print("[Upload to BQ] Data is empty.")
+            return
 
-    table_id = f"{cfg.TABLE_ID}.{table_name}"
-    job = client.load_table_from_dataframe(
-        pd.DataFrame(data), table_id, job_config=job_config
-    )  # Make an API request
-    job.result()  # Wait for job to finish
+        df = pd.DataFrame(data)
+        client = bigquery.Client(
+            project=cfg.CREDENTIALS.project_id, credentials=cfg.CREDENTIALS
+        )
+        job_config = bigquery.LoadJobConfig(
+            write_disposition="WRITE_APPEND",
+            time_partitioning=bigquery.table.TimePartitioning(
+                type_=partitioning_type, field=partitioning_field
+            ),
+            clustering_fields=clustering_fields,
+        )
+
+        table_id = f"{cfg.TABLE_ID}.{table_name}"
+        job = client.load_table_from_dataframe(
+            df, table_id, job_config=job_config
+        )  # Make an API request
+        job.result()  # Wait for job to finish
+    except BadRequest as e:
+        print(f"[Upload to BQ] Error: {e}")
+        print(f"[Upload to BQ] Dataframe columns: {list(df.columns)}")
+
+        table = client.get_table(table_id)
+        print(f"[Upload to BQ] Table schema: {table.schema}")
+        raise e
 
 
 @task(name="Match-History", log_prints=True)
