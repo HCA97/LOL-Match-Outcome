@@ -8,8 +8,6 @@ from sklearn.metrics import accuracy_score
 
 from prefect import task
 
-from src.logging import log_model
-
 
 @task(log_prints=True)
 def train_sgd(

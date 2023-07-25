@@ -35,8 +35,7 @@ def log_register_models(project: str, entity: str, run_id: str):
     enc, cat_columns, num_columns = load_pickle(enc_path)
 
     os.makedirs("models", exist_ok=True)
-    curr_date = dt.datetime.today().strftime("%Y-%m-%d")
-    path = f"models/clf-enc-{curr_date}.pkl"
+    path = f"models/clf-enc.pkl"
     dump_pickle((clf, enc, cat_columns, num_columns), path)
 
     artifact_all = wandb.Artifact("lol-match-predictor-clf-end", type="model")

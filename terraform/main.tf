@@ -24,7 +24,10 @@ provider "google" {
 resource "google_project_service" "project" {
   for_each = toset([
     "compute.googleapis.com",
-    "iamcredentials.googleapis.com"
+    "iamcredentials.googleapis.com",
+    "secretmanager.googleapis.com",
+    "artifactregistry.googleapis.com",
+    "run.googleapis.com"
   ])
   project = var.project
   service = each.key
@@ -191,3 +194,150 @@ resource "google_bigquery_job" "matches" {
   }
 }
 
+
+#
+# API
+# 
+
+resource "google_artifact_registry_repository" "api-repo" {
+  location      = var.region
+  repository_id = "api-repo"
+  description   = "docker repo for api"
+  format        = "DOCKER"
+  depends_on    = [google_project_service.project]
+}
+
+data "archive_file" "api-zip" {
+  type        = "zip"
+  source_dir  = "${path.module}/../api"
+  output_path = "${path.module}/../tmp/api.zip"
+}
+
+locals {
+  docker_tag = "${var.region}-docker.pkg.dev/${var.project}/${google_artifact_registry_repository.api-repo.name}/api:${data.archive_file.api-zip.output_md5}"
+}
+resource "null_resource" "build_docker_image" {
+  triggers = {
+    api_md5 = data.archive_file.api-zip.output_md5
+  }
+  provisioner "local-exec" {
+    command = <<EOT
+
+      gcloud auth configure-docker --quiet
+
+      cd ../api
+      docker build -t ${local.docker_tag} .
+      docker push ${local.docker_tag}
+
+    EOT
+  }
+
+}
+
+# WANB Secret
+
+
+resource "google_secret_manager_secret" "wandb-key" {
+  secret_id = "wandb_api_key"
+  project   = var.project
+
+  replication {
+    automatic = true
+  }
+
+  depends_on = [google_project_service.project]
+}
+
+resource "google_secret_manager_secret_version" "wandb-key-secret" {
+  secret = google_secret_manager_secret.wandb-key.id
+
+  secret_data = var.wandb_key
+}
+
+resource "google_storage_bucket_iam_member" "api-storage-permission" {
+  bucket = google_storage_bucket.data-lake-bucket.name
+  role   = "roles/storage.objectViewer"
+  member = "serviceAccount:${google_service_account.api_sa.email}"
+}
+
+resource "google_project_iam_member" "api-permissions" {
+  for_each = toset([
+    "roles/secretmanager.secretAccessor",
+    "roles/storage.insightsCollectorService",
+    "roles/run.invoker"
+  ])
+  project = var.project
+  role    = each.key
+  member  = "serviceAccount:${google_service_account.api_sa.email}"
+}
+
+resource "google_service_account" "api_sa" {
+  project      = var.project
+  account_id   = "api-sa"
+  display_name = "Service Account for Cloud run"
+
+  depends_on = [
+    google_project_service.project
+  ]
+}
+
+
+
+resource "google_cloud_run_service" "api" {
+  name     = "predictor-api"
+  location = var.region
+
+
+  template {
+    spec {
+      timeout_seconds       = 10
+      container_concurrency = 30
+      service_account_name  = google_service_account.api_sa.email
+      containers {
+        image = local.docker_tag
+        env {
+          name = "WANDB_API_KEY"
+          value_from {
+            secret_key_ref {
+              key  = "latest"
+              name = google_secret_manager_secret.wandb-key.secret_id
+            }
+          }
+        }
+      }
+
+    }
+
+    metadata {
+
+      annotations = {
+        "autoscaling.knative.dev/maxScale" = "1"
+        "run.googleapis.com/client-name"   = "terraform"
+      }
+    }
+  }
+
+  traffic {
+    percent         = 100
+    latest_revision = true
+  }
+
+  depends_on = [null_resource.build_docker_image, google_project_service.project, google_project_iam_member.api-permissions]
+}
+
+
+data "google_iam_policy" "noauth" {
+  binding {
+    role = "roles/run.invoker"
+    members = [
+      "allUsers",
+    ]
+  }
+}
+
+resource "google_cloud_run_service_iam_policy" "noauth" {
+  location    = google_cloud_run_service.api.location
+  project     = google_cloud_run_service.api.project
+  service     = google_cloud_run_service.api.name
+  policy_data = data.google_iam_policy.noauth.policy_data
+}
