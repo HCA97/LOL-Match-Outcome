@@ -27,3 +27,6 @@ pylint==2.14.4
 black==22.6.0
 isort==5.10.1
 pre-commit
+
+# testing
+pytest
