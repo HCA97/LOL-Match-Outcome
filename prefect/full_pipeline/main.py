@@ -15,17 +15,19 @@ def main(start_time: Optional[dt.datetime] = None, max_players: int = 100):
     )
 
     print(
-        f"[Data Flow] Flow Status: {data_flow.state_name} - Took: {data_flow.total_run_time.total_seconds()}s"
+        f"[Data Flow] Flow Status: {data_flow.state_name}"
+        f" - Took: {data_flow.total_run_time.total_seconds()}s"
     )
 
     # train model
     ml_flow: FlowRun = run_deployment(
         name="Training-Pipeline/Training-Pipeline",
-        parameters={"start_time": start_time},
+        parameters={"end_time": start_time, "start_time": None},
     )
 
     print(
-        f"[ML Flow] Flow Status: {ml_flow.state_name} - Took: {ml_flow.total_run_time.total_seconds()}s"
+        f"[ML Flow] Flow Status: {ml_flow.state_name} "
+        f"- Took: {ml_flow.total_run_time.total_seconds()}s"
     )
 
 

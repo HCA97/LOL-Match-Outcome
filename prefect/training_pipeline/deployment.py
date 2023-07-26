@@ -1,11 +1,9 @@
 import datetime as dt
 
-from prefect.deployments import Deployment
-from prefect.filesystems import GCS
-
-
 from main import main
 
+from prefect.deployments import Deployment
+from prefect.filesystems import GCS
 
 gcs_block = GCS.load("mlops-project-deployment")
 

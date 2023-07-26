@@ -33,6 +33,10 @@ resource "google_project_service" "project" {
   service = each.key
 }
 
+#
+# Prefect
+#
+
 resource "google_storage_bucket_iam_member" "storage_permission" {
   for_each = toset([
     google_storage_bucket.data-lake-bucket.name,
@@ -196,6 +200,28 @@ resource "google_bigquery_job" "matches" {
 
 
 #
+# WANB Secret
+#
+
+resource "google_secret_manager_secret" "wandb-key" {
+  secret_id = "wandb_api_key"
+  project   = var.project
+
+  replication {
+    automatic = true
+  }
+
+  depends_on = [google_project_service.project]
+}
+
+resource "google_secret_manager_secret_version" "wandb-key-secret" {
+  secret = google_secret_manager_secret.wandb-key.id
+
+  secret_data = var.wandb_key
+}
+
+
+#
 # API
 # 
 
@@ -232,26 +258,6 @@ resource "null_resource" "build_docker_image" {
     EOT
   }
 
-}
-
-# WANB Secret
-
-
-resource "google_secret_manager_secret" "wandb-key" {
-  secret_id = "wandb_api_key"
-  project   = var.project
-
-  replication {
-    automatic = true
-  }
-
-  depends_on = [google_project_service.project]
-}
-
-resource "google_secret_manager_secret_version" "wandb-key-secret" {
-  secret = google_secret_manager_secret.wandb-key.id
-
-  secret_data = var.wandb_key
 }
 
 resource "google_storage_bucket_iam_member" "api-storage-permission" {

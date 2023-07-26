@@ -1,4 +1,4 @@
-scikit-learn==1.3.0
+# general stuff
 requests
 pandas==1.5.2
 prefect==2.11.0
@@ -9,10 +9,24 @@ pandas-gbq==0.18.1
 google-cloud-storage
 fsspec
 gcsfs
-pydantic==1.10.11
+pydantic==1.10.11 # smt wrong with new pydantic
+
+# training pipeline
+scikit-learn==1.3.0
 beautifulsoup4
 matplotlib
 plotly
 wandb
 numpy
+
+# for api
 Flask
+
+# formatiing
+pylint==2.14.4
+black==22.6.0
+isort==5.10.1
+pre-commit
+
+# testing
+pytest

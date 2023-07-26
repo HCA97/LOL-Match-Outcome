@@ -1,18 +1,17 @@
-import datetime as dt
-from typing import Optional, List, Dict, Any
-import itertools
+# redefined-outer-name
 import asyncio
+import datetime as dt
+import itertools
+from typing import Any, Dict, List, Optional
 
+import utils
+import config as cfg
 import pandas as pd
+from google.cloud import bigquery
+from google.api_core.exceptions import BadRequest
 
 from prefect import flow, task
 from prefect.deployments import run_deployment
-
-from google.cloud import bigquery
-from google.api_core.exceptions import BadRequest
-import config as cfg
-import utils
-
 
 #
 # REFECT TASKS
@@ -24,10 +23,10 @@ def solo_queue_players(division: str, tier: str, max_size: int = 100) -> List[di
     page = 1
 
     data = []
-
+    url = f'{cfg.REQUEST_URLS["LEAUGE-V4"]}/lol/league/v4/entries/RANKED_SOLO_5x5/{tier}/{division}'
     while len(data) < max_size:
         with cfg.SESSION.get(
-            f'{cfg.REQUEST_URLS["LEAUGE-V4"]}/lol/league/v4/entries/RANKED_SOLO_5x5/{tier}/{division}',
+            url,
             params={"page": page},
             headers={"X-Riot-Token": cfg.RIOT_API_KEY},
         ) as req:
@@ -133,6 +132,7 @@ def match_infos(match_ids: list) -> pd.DataFrame:
                 print(f"[PROCESS MATCHES] {i}/{len(match_ids)} are done.")
             data = utils.get_match_info(match_id)
             participants.extend(utils.match_transform(data))
+        # pylint: disable=broad-except
         except Exception as e:
             print(f"Match Id: {match_id} - Error : {e}")
 
@@ -198,9 +198,7 @@ def workflow(
         end_time = dt.datetime.utcnow()
 
     if start_time > end_time:
-        tmp = start_time
-        start_time = end_time
-        end_time = tmp
+        start_time, end_time = end_time, start_time
 
     matches = collect_matches(puuids, start_time, end_time)
 

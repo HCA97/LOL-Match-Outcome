@@ -1,13 +1,10 @@
 import json
-
 import datetime as dt
 
+import config as cfg
 from google.cloud import storage
 
 from prefect.blocks.system import Secret
-
-import config as cfg
-
 
 # -------------------------- #
 # GCS UTILS                  #
@@ -102,7 +99,11 @@ def match_history(
     count: int = 100,
     match_type: str = "ranked",
 ) -> list:
-    file_name = f'match-history/{summoner_puuid}-{match_type}-{start_time.strftime("%m-%d-%Y_%H:%M:%S")}-{end_time.strftime("%m-%d-%Y_%H:%M:%S")}.json'
+    file_name = (
+        f'match-history/{summoner_puuid}-{match_type}'
+        f'-{start_time.strftime("%m-%d-%Y_%H:%M:%S")}-'
+        f'{end_time.strftime("%m-%d-%Y_%H:%M:%S")}.json'
+    )
 
     if blob_exists(cfg.DATA_LAKE, file_name, cfg.CREDENTIALS):
         return download_blob_to_memory(cfg.DATA_LAKE, file_name, cfg.CREDENTIALS)
@@ -149,24 +150,24 @@ def get_match_info(match_id: str) -> dict:
 
     if blob_exists(cfg.DATA_LAKE, file_name, cfg.CREDENTIALS):
         return download_blob_to_memory(cfg.DATA_LAKE, file_name, cfg.CREDENTIALS)
-    else:
-        with cfg.SESSION.get(
-            f'{cfg.REQUEST_URLS["MATCH-V5"]}/lol/match/v5/matches/{match_id}',
-            headers={"X-Riot-Token": cfg.RIOT_API_KEY},
-        ) as req:
-            if req.status_code == 200:
-                data = req.json()
-                upload_blob_from_memory(
-                    cfg.DATA_LAKE,
-                    json.dumps(data, indent=4),
-                    file_name,
-                    cfg.CREDENTIALS,
-                )
 
-                return data
-            else:
-                print(f"Failed to do request ({req.status_code})")
-                return {}
+    with cfg.SESSION.get(
+        f'{cfg.REQUEST_URLS["MATCH-V5"]}/lol/match/v5/matches/{match_id}',
+        headers={"X-Riot-Token": cfg.RIOT_API_KEY},
+    ) as req:
+        if req.status_code == 200:
+            data = req.json()
+            upload_blob_from_memory(
+                cfg.DATA_LAKE,
+                json.dumps(data, indent=4),
+                file_name,
+                cfg.CREDENTIALS,
+            )
+
+            return data
+
+        print(f"Failed to do request ({req.status_code})")
+        return {}
 
 
 def match_transform(match: dict) -> list:

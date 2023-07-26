@@ -1,9 +1,10 @@
-from typing import List
 import pickle
 import shutil
+from typing import List
 
 import requests
 from bs4 import BeautifulSoup
+
 import wandb
 from prefect import task
 
@@ -12,7 +13,7 @@ def get_existing_champs() -> List[str]:
     champs = []
 
     # the dragon data is 1.6GB, i only needed the champion names
-    url = f"https://www.leagueoflegends.com/en-us/champions/"
+    url = "https://www.leagueoflegends.com/en-us/champions/"
     req = requests.get(url)
     if req.status_code == 200:
         soup = BeautifulSoup(req.content, "html.parser")

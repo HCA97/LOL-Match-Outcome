@@ -1,10 +1,10 @@
 import os
 
 import requests
-from requests.adapters import HTTPAdapter, Retry
 from prefect_gcp import GcpCredentials
-from prefect.blocks.system import Secret
+from requests.adapters import Retry, HTTPAdapter
 
+from prefect.blocks.system import Secret
 
 SESSION = requests.Session()
 retries = Retry(total=5, backoff_factor=0.5, status_forcelist=[429])

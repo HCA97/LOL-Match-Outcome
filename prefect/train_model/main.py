@@ -1,10 +1,10 @@
 import os
 import itertools
 
+import src
+
 import wandb
 from prefect import flow
-
-import src
 
 
 @flow(name="Train-Classifier", log_prints=True)
@@ -68,6 +68,7 @@ def train_classifier(
 
 
 if __name__ == "__main__":
+    # pylint: disable=line-too-long
     test_path = "gs://mlops-zoomcamp-project-data-lake-1234/train_model/data/07-19-2023-07-24-2023/test.csv.gz"
     train_path = "gs://mlops-zoomcamp-project-data-lake-1234/train_model/data/07-19-2023-07-24-2023/train.csv.gz"
     wandb_project = "lol-match-predictor"
