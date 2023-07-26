@@ -8,9 +8,6 @@ on:
     branch:
       - main
 
-permissions:
-  contents: write
-
 jobs:
   checks:
     permissions:
@@ -21,4 +18,9 @@ jobs:
         with:
           token: ${{ secrets.TOKEN }} 
       - uses: hashicorp/setup-terraform@v2
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - run: |-
+          pip install pylint==2.14.4 black==22.6.0 isort==5.10.1 
       - run: make check
