@@ -1,9 +1,7 @@
-from prefect.deployments import Deployment
-from prefect.filesystems import GCS
-from prefect.server.schemas.schedules import CronSchedule
-
 from main import workflow, main_workflow
 
+from prefect.deployments import Deployment
+from prefect.filesystems import GCS
 
 gcs_block = GCS.load("mlops-project-deployment")
 

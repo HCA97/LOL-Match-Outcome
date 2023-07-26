@@ -41,7 +41,7 @@ class MatchPredictor:
             try:
                 return float(r)
             # pylint: disable=broad-except
-            except:
+            except Exception:
                 return r
 
         champ_stats_team = self.champ_stats[

@@ -1,9 +1,8 @@
 from typing import Dict
 from multiprocessing import Lock
 
-from flask import Flask, request
-
 import config as cfg
+from flask import Flask, request
 from model import MatchPredictor
 
 app = Flask(__name__)
@@ -27,6 +26,7 @@ def predict():
                     cached_models[run_id] = MatchPredictor(
                         run_id, cfg.WANDB_PATH, cfg.DATA_LAKE
                     )
+            # pylint: disable=broad-except
             except Exception as e:
                 print(f"Error: {e}")
                 return {"error": "Failed to load the model"}, 500

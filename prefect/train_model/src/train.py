@@ -1,11 +1,8 @@
 import numpy as np
-
-import wandb
-
+from sklearn.metrics import accuracy_score
 from sklearn.linear_model import SGDClassifier
 
-from sklearn.metrics import accuracy_score
-
+import wandb
 from prefect import task
 
 
