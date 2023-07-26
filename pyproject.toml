@@ -11,7 +11,8 @@ disable = [
     "too-many-locals",
     "no-member",
     "no-name-in-module",
-    "import-error"
+    "import-error",
+    "fixme"
 ]
 
 [tool.black]
