@@ -1,15 +1,12 @@
-from typing import Tuple, List, Union, Any
 import itertools
+from typing import Any, List, Tuple, Union
 
 import numpy as np
 import pandas as pd
-
-from prefect import task
-
+from src.utils import get_existing_champs
 from sklearn.preprocessing import OneHotEncoder
 
-from src.utils import get_existing_champs
-from src.logging import log_preprocess
+from prefect import task
 
 
 @task(log_prints=True)
@@ -23,15 +20,13 @@ def load_data(data_path: str) -> pd.DataFrame:
 @task(log_prints=True)
 def preprocess_data(
     data: pd.DataFrame,
-    cat_columns: List[str] = [],
-    num_columns: List[str] = [],
+    cat_columns: List[str] = None,
+    num_columns: List[str] = None,
     return_model: bool = False,
 ) -> Union[Tuple[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray, Any]]:
     # categorical columns
     if not cat_columns:
-        cat_columns = [
-            "tier",
-        ] + [
+        cat_columns = ["tier",] + [
             f"{team}_team_{lane}"
             for team, lane in itertools.product(
                 ["blue", "red"], ["top", "jg", "mid", "bot", "sup"]

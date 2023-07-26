@@ -1,18 +1,16 @@
 import os
-import datetime as dt
-from typing import List, Any
+from typing import Any, List
+
+import numpy as np
+import pandas as pd
+import matplotlib
+import matplotlib.pyplot as plt
+from src.utils import dump_pickle, load_pickle
 
 import wandb
-
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
 from prefect import task
-import matplotlib
 
 matplotlib.use("Agg")
-
-from src.utils import dump_pickle, load_pickle
 
 
 @task(log_prints=True)
@@ -35,7 +33,7 @@ def log_register_models(project: str, entity: str, run_id: str):
     enc, cat_columns, num_columns = load_pickle(enc_path)
 
     os.makedirs("models", exist_ok=True)
-    path = f"models/clf-enc.pkl"
+    path = "models/clf-enc.pkl"
     dump_pickle((clf, enc, cat_columns, num_columns), path)
 
     artifact_all = wandb.Artifact("lol-match-predictor-clf-end", type="model")

@@ -1,10 +1,11 @@
-import pickle
 import os
+import pickle
 from typing import List, Tuple, Union
 
-import wandb
-import pandas as pd
 import numpy as np
+import pandas as pd
+
+import wandb
 
 
 class MatchPredictor:
@@ -39,6 +40,7 @@ class MatchPredictor:
         def _float(r: str) -> Union[str, float]:
             try:
                 return float(r)
+            # pylint: disable=broad-except
             except:
                 return r
 
@@ -81,6 +83,7 @@ class MatchPredictor:
         return list(cat_champ_columns), list(num_champ_columns)
 
     def predict(self, x: dict) -> Tuple[dict, int]:
+        # pylint: disable=too-many-locals
         try:
             tier: str = x["tier"]
             blue_team: List[str] = x["blue_team"]
@@ -91,9 +94,11 @@ class MatchPredictor:
         clf, enc, cat_columns, num_columns = self.model
 
         if len(blue_team) != 5 or len(red_team) != 5:
+            # pylint: disable=line-too-long
             return {
                 "error": "Blue and Red team must have 5 players in following order (top, jg, mid, bot, sup)"
             }, 400
+            # pylint: enable=line-too-long
 
         # this logic should be in the model!
 
@@ -132,6 +137,7 @@ class MatchPredictor:
             winner = "RED"
 
         return {"winner": winner, "prob": p, "run_id": self.run_id}, 200
+        # pylint: enable=too-many-locals
 
 
 if __name__ == "__main__":

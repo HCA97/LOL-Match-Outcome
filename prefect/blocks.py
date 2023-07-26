@@ -2,6 +2,7 @@ import json
 import argparse
 
 from prefect_gcp import GcpCredentials
+
 from prefect.filesystems import GCS
 from prefect.blocks.system import Secret
 
@@ -10,7 +11,7 @@ parser.add_argument("--sa_path")
 parser.add_argument("--riot_api_key")
 args = parser.parse_args()
 
-with open(args.sa_path) as f:
+with open(args.sa_path, encoding='utf-8') as f:
     sa = json.load(f)
 
 

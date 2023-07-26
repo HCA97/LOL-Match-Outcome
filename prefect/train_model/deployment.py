@@ -1,11 +1,7 @@
-import datetime as dt
+from main import train_classifier
 
 from prefect.deployments import Deployment
 from prefect.filesystems import GCS
-
-
-from main import train_classifier
-
 
 gcs_block = GCS.load("mlops-project-deployment")
 

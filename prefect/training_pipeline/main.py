@@ -1,16 +1,14 @@
 import datetime as dt
 from typing import Tuple
 
+import config as cfg
 import pandas as pd
+from sklearn.model_selection import train_test_split
+from prefect_gcp.cloud_storage import GcsBucket
 
 from prefect import flow, task
 from prefect.flows import FlowRun
 from prefect.deployments import run_deployment
-from prefect_gcp.cloud_storage import GcsBucket
-
-from sklearn.model_selection import train_test_split
-
-import config as cfg
 
 
 @task(log_prints=True)
@@ -20,7 +18,9 @@ def load_matches(start_time: dt.datetime, end_time: dt.datetime) -> pd.DataFrame
     df = pd.read_gbq(
         f"""
         SELECT DISTINCT * EXCEPT(dayHour, weekDay)
-        FROM `{cfg.PROJECT_ID}.{cfg.DATASET_ID}.matches`(DATETIME('{start_time_str}'), DATETIME('{end_time_str}'))
+        FROM `{cfg.PROJECT_ID}.{cfg.DATASET_ID}.matches`(
+            DATETIME('{start_time_str}'), DATETIME('{end_time_str}')
+        )
     """,
         cfg.PROJECT_ID,
     )
@@ -35,7 +35,9 @@ def load_champ_stats(start_time: dt.datetime, end_time: dt.datetime) -> pd.DataF
     df = pd.read_gbq(
         f"""
         SELECT *
-        FROM `{cfg.PROJECT_ID}.{cfg.DATASET_ID}.champ_stats`(DATETIME('{start_time_str}'), DATETIME('{end_time_str}'))
+        FROM `{cfg.PROJECT_ID}.{cfg.DATASET_ID}.champ_stats`(
+            DATETIME('{start_time_str}'), DATETIME('{end_time_str}')
+        )
         """,
         cfg.PROJECT_ID,
     )
@@ -115,7 +117,7 @@ def start_training(train_path: str, test_path: str):
             "wandb_project": cfg.WANDB_PROJECT,
             "wandb_entity": cfg.WANDB_ENTITY,
         },
-        flow_run_name=f"Train-Model",
+        flow_run_name="Train-Model",
     )
     print(
         f"Flow Status: {flow_run.state_name} - Took: {flow_run.total_run_time.total_seconds()}s"
@@ -135,9 +137,7 @@ def main(
         start_time = end_time - dt.timedelta(7)
 
     if start_time > end_time:
-        tmp = end_time
-        end_time = start_time
-        start_time = tmp
+        start_time, end_time = end_time, start_time
 
     matches_df = load_matches.submit(start_time, end_time)
     champs_stats_df = load_champ_stats.submit(start_time, end_time)
