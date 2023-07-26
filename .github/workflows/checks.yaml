@@ -7,8 +7,10 @@ on:
   pull_request:
     branch:
       - main
+
 permissions:
   contents: write
+
 jobs:
   checks:
     permissions:
