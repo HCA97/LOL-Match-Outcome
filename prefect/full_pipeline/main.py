@@ -21,7 +21,7 @@ def main(start_time: Optional[dt.datetime] = None, max_players: int = 100):
     # train model
     ml_flow: FlowRun = run_deployment(
         name="Training-Pipeline/Training-Pipeline",
-        parameters={"start_time": start_time},
+        parameters={"end_time": start_time, "start_time": None},
     )
 
     print(

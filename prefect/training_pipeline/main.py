@@ -19,7 +19,7 @@ def load_matches(start_time: dt.datetime, end_time: dt.datetime) -> pd.DataFrame
     end_time_str = end_time.strftime("%Y-%m-%dT%H:%M:%S.%f")
     df = pd.read_gbq(
         f"""
-        SELECT * EXCEPT(dayHour, weekDay)
+        SELECT DISTINCT * EXCEPT(dayHour, weekDay)
         FROM `{cfg.PROJECT_ID}.{cfg.DATASET_ID}.matches`(DATETIME('{start_time_str}'), DATETIME('{end_time_str}'))
     """,
         cfg.PROJECT_ID,
