@@ -3,7 +3,7 @@ check-python-lint:
 	black .
 	pylint --recursive=y .
 
-check-terraform:
+check-terraform: terraform-setup
 	cd terraform; \
 	terraform fmt --recursive; \
 	terraform validate 
