@@ -6,16 +6,16 @@ check-python-lint:
 check-terraform: terraform-setup
 	cd terraform; \
 	terraform fmt --recursive; \
-	terraform validate 
+	terraform validate
 
 check: check-python-lint check-terraform
 
-prefect-setup: 
+prefect-setup:
 	prefect cloud login
 	prefect block register -m prefect_gcp.cloud_run
 
-local-setup: 
-	pip install -r requirements.txt	
+local-setup:
+	pip install -r requirements.txt
 	pre-commit
 
 terraform-setup:
@@ -39,7 +39,7 @@ deploy-traininig-pipeline:
 	cd prefect/training_pipeline; python deployment.py
 
 deploy-prefect: deploy-collect-matches deploy-train-model deploy-traininig-pipeline deploy-full-pipeline
-	
+
 
 deploy-terraform: terraform-setup check-terraform
 	gcloud auth login
@@ -50,7 +50,7 @@ deploy-terraform: terraform-setup check-terraform
 		-var="prefect_key=$(prefect_api_key)" \
 		-var="prefect_account_id=$(prefect_account_id)" \
 		-var="prefect_workspace_id=$(prefect_workspace_id)" \
-		-var="wandb_key=$(wandb_key)" 
+		-var="wandb_key=$(wandb_key)"
 
 test-api:
-	pytest api/tests/ --disable-warnings
+	python -m pytest api/tests/ --disable-warnings

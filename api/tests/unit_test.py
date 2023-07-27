@@ -42,7 +42,7 @@ def _csv(path: str):
     else None,
 )
 @patch('pandas.read_csv', side_effect=_csv)
-def test_match_predictor(_):
+def test_match_predictor(*_):
     from model import MatchPredictor
 
     clf = MatchPredictor("07-19-2023-07-20-2023", "test/path", "dmy")
