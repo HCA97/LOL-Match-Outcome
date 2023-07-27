@@ -1,5 +1,6 @@
 # pylint: disable=import-outside-toplevel,protected-access
 import sys
+import time
 import threading as T
 from unittest.mock import MagicMock, patch
 
@@ -9,7 +10,7 @@ from pandas import read_csv
 sys.path.append('./api')
 
 
-@patch("model.MatchPredictor")
+@patch("model.MatchPredictor", side_effect=time.sleep(2))
 def test_caching(mock_predictor: MagicMock):
     from app import _predict
 
