@@ -69,7 +69,7 @@ def add_puuid(players: List[dict]) -> List[dict]:
     return new_players
 
 
-@task(name="Upload-To-BQ", log_prints=True)
+@task(name="Upload-To-BQ", log_prints=True, retries=3)
 def upload_to_bq(
     data: List[dict],
     table_name: str,

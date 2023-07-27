@@ -51,3 +51,6 @@ deploy-terraform: terraform-setup check-terraform
 		-var="prefect_account_id=$(prefect_account_id)" \
 		-var="prefect_workspace_id=$(prefect_workspace_id)" \
 		-var="wandb_key=$(wandb_key)" 
+
+test-api:
+	pytest api/tests/ --disable-warnings

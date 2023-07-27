@@ -1,11 +1,23 @@
 import os
 import pickle
-from typing import List, Tuple, Union
-
+from typing import List, Tuple, Union, Any
 import numpy as np
 import pandas as pd
 
 import wandb
+
+import config as cfg
+
+
+def download_model(run_id: str, wand_path: str) -> str:
+    success = wandb.login(key=cfg.WANDB_API_KEY)
+    if not success:
+        print('Failed to login to wandb')
+        raise RuntimeError("Wrong credentials")
+
+    run = wandb.init()
+    artifact: wandb.Artifact = run.use_artifact(f"{wand_path}:{run_id}", type="model")
+    return artifact.download()
 
 
 class MatchPredictor:
@@ -15,12 +27,7 @@ class MatchPredictor:
         self.run_id = run_id
 
     def _load_model(self, run_id: str, wand_path: str) -> tuple:
-        run = wandb.init()
-        artifact: wandb.Artifact = run.use_artifact(
-            f"{wand_path}:{run_id}", type="model"
-        )
-        artifact_dir = artifact.download()
-
+        artifact_dir = download_model(run_id, wand_path)
         model_path = os.path.join(artifact_dir, os.listdir(artifact_dir)[0])
         with open(model_path, "rb") as f:
             model = pickle.load(f)
@@ -71,7 +78,7 @@ class MatchPredictor:
         for col in cat_columns:
             s = col.split("_")
             if len(s) > 1:
-                if s[-1] in ["top", "jg", "mid", "bot", "sup"]:
+                if s[-1].lower() in ["top", "jg", "mid", "bot", "sup"]:
                     cat_champ_columns.add("championName")
                 else:
                     cat_champ_columns.add(s[-1])
@@ -81,6 +88,17 @@ class MatchPredictor:
             if len(s) > 1:
                 num_champ_columns.add(s[-1])
         return list(cat_champ_columns), list(num_champ_columns)
+
+    def _merge_teams_features(
+        self, blue_team_features: List[List[Any]], red_team_features: List[List[Any]]
+    ) -> List[Any]:
+        features = []
+        for b_feats, r_feats in zip(blue_team_features, red_team_features):
+            for bf, rf in zip(b_feats, r_feats):
+                features.append(bf)
+                features.append(rf)
+
+        return features
 
     def predict(self, x: dict) -> Tuple[dict, int]:
         # pylint: disable=too-many-locals
@@ -114,18 +132,14 @@ class MatchPredictor:
         red_team_features_num = self.features("RED", tier, red_team, num_champ_columns)
         red_team_features_cat = self.features("RED", tier, red_team, cat_champ_columns)
 
-        cat_features = [tier.lower()]
-        for b_feats, r_feats in zip(blue_team_features_cat, red_team_features_cat):
-            for bf, rf in zip(b_feats, r_feats):
-                cat_features.append(bf)
-                cat_features.append(rf)
+        cat_features = [tier.lower()] + self._merge_teams_features(
+            blue_team_features_cat, red_team_features_cat
+        )
         x_cat = np.array([cat_features])
 
-        num_features = []
-        for b_feats, r_feats in zip(blue_team_features_num, red_team_features_num):
-            for bf, rf in zip(b_feats, r_feats):
-                num_features.append(bf)
-                num_features.append(rf)
+        num_features = self._merge_teams_features(
+            blue_team_features_num, red_team_features_num
+        )
         x_num = np.array([num_features])
 
         x_cat_onehot = enc.transform(x_cat)
@@ -136,7 +150,11 @@ class MatchPredictor:
         if p > 0.5:
             winner = "RED"
 
-        return {"winner": winner, "prob": p, "run_id": self.run_id}, 200
+        return {
+            "winner": winner,
+            "prob": p,
+            "run_id": self.run_id,
+        }, 200
         # pylint: enable=too-many-locals
 
 
