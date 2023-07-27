@@ -1,6 +1,5 @@
 import os
 
-
 WANDB_API_KEY = os.getenv("WANDB_API_KEY")
 
 WANDB_PATH = os.getenv("WANDB_PATH", "hca97/model-registry/lol-match-predictor")

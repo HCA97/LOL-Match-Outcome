@@ -1,12 +1,12 @@
 import os
 import pickle
-from typing import List, Tuple, Union, Any
+from typing import Any, List, Tuple, Union
+
 import numpy as np
+import config as cfg
 import pandas as pd
 
 import wandb
-
-import config as cfg
 
 
 def download_model(run_id: str, wand_path: str) -> str:

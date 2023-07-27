@@ -1,6 +1,7 @@
-from unittest.mock import MagicMock, patch
-import threading as T
+# pylint: disable=import-outside-toplevel,protected-access
 import sys
+import threading as T
+from unittest.mock import MagicMock, patch
 
 # we mock pandas.read_csv so we need to use from
 from pandas import read_csv
@@ -25,11 +26,12 @@ def test_caching(mock_predictor: MagicMock):
     assert mock_predictor.call_count == 1
 
 
-def _csv(path: str, *args):
+def _csv(path: str):
     if path == "gs://dmy/train_model/data/07-19-2023-07-20-2023/champ_stats.csv.gz":
         return read_csv(
-            f"api/tests/artifacts/data/train_model_data_07-19-2023-07-20-2023_champ_stats.csv.gz"
+            "api/tests/artifacts/data/train_model_data_07-19-2023-07-20-2023_champ_stats.csv.gz"
         )
+    return None
 
 
 @patch(
@@ -39,7 +41,7 @@ def _csv(path: str, *args):
     else None,
 )
 @patch('pandas.read_csv', side_effect=_csv)
-def test_match_predictor(*args):
+def test_match_predictor(_):
     from model import MatchPredictor
 
     clf = MatchPredictor("07-19-2023-07-20-2023", "test/path", "dmy")
