@@ -2,7 +2,7 @@
 export HOME=/root
 wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O $HOME/miniconda.sh
 bash $HOME/miniconda.sh -b -p $HOME/miniconda
-eval "$($HOME/miniconda/bin/conda shell.bash hook)" 
+eval "$($HOME/miniconda/bin/conda shell.bash hook)"
 conda init
 conda config --set auto_activate_base true
 conda update conda -y
@@ -24,10 +24,10 @@ pip install \
     matplotlib \
     plotly \
     wandb \
-    numpy 
+    numpy
 
 export PREFECT_API_KEY="${prefect_key}"
 export PREFECT_API_URL="https://api.prefect.cloud/api/accounts/${prefect_account_id}/workspaces/${prefect_workspace_id}"
 export PREFECT_PROFILE="default"
 export WANDB_API_KEY="${wandb_key}"
-prefect agent start --pool default-agent-pool --work-queue match-predictor 
+prefect agent start --pool default-agent-pool --work-queue match-predictor

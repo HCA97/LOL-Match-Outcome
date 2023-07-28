@@ -2,11 +2,11 @@ CREATE OR REPLACE TABLE FUNCTION `${project}.${dataset_id}.champ_stats`(start_da
 
 WITH match_latest AS (
     SELECT *
-    FROM `${project}.${dataset_id}.${table_name}` 
+    FROM `${project}.${dataset_id}.${table_name}`
     WHERE gameStartTime BETWEEN start_date AND end_date
-    QUALIFY ROW_NUMBER() OVER (PARTITION BY matchId, teamPosition, teamId ORDER BY retrieveTime DESC) = 1 
+    QUALIFY ROW_NUMBER() OVER (PARTITION BY matchId, teamPosition, teamId ORDER BY retrieveTime DESC) = 1
 )
- 
+
 
 -- Generated using Python
 SELECT cs.tier

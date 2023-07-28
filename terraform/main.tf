@@ -223,7 +223,7 @@ resource "google_secret_manager_secret_version" "wandb-key-secret" {
 
 #
 # API
-# 
+#
 
 resource "google_artifact_registry_repository" "api-repo" {
   location      = var.region

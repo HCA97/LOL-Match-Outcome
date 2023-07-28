@@ -12,8 +12,12 @@ disable = [
     "no-member",
     "no-name-in-module",
     "import-error",
-    "fixme"
+    "fixme",
+    "missing-function-docstring",
+    "missing-module-docstring",
+    "ungrouped-imports",
 ]
+
 
 [tool.black]
 line-length = 88
@@ -23,3 +27,8 @@ skip-string-normalization = true
 [tool.isort]
 multi_line_output = 3
 length_sort = true
+profile = "black"
+py_version=39
+skip = [".gitignore", ".dockerignore"]
+extend_skip = [".md", ".html", ".csv", ".pkl", ".yaml", ".txt", ".json"]
+extend_skip_glob = ["**/*_test.py", "**/test_*.py"]

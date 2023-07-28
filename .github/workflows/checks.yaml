@@ -1,6 +1,6 @@
-name: "Python and Terraform Checks"
+name: "Python Checks"
 
-on: 
+on:
   push:
     branch:
       - main
@@ -10,16 +10,45 @@ on:
 
 jobs:
   checks:
-    permissions:
-      pull-requests: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
-          token: ${{ secrets.TOKEN }} 
+          token: ${{ secrets.TOKEN }}
       - uses: actions/setup-python@v4
         with:
           python-version: '3.9'
-      - run: |-
-          pip install pylint==2.14.4 black==22.6.0 isort==5.10.1 
-      - run: make check-python-lint
+      - name: Python Setup
+        run: |-
+          pip install pylint==2.14.4 black==22.6.0 isort==5.10.1
+      - name: Python Checks
+        run: make check-python-lint
+
+  test_api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.TOKEN }}
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Test API
+        run: |-
+          pip install -r api/requirements.txt
+          pip install pytest
+          make test-api
+
+  test_pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.TOKEN }}
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Test Pipeline
+        run: |-
+          pip install -r requirements.txt
+          make test-prefect
