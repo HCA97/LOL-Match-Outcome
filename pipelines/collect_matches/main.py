@@ -7,11 +7,10 @@ from typing import Any, Dict, List, Optional
 import utils
 import config as cfg
 import pandas as pd
-from google.cloud import bigquery
-from google.api_core.exceptions import BadRequest
-
 from prefect import flow, task
+from google.cloud import bigquery
 from prefect.deployments import run_deployment
+from google.api_core.exceptions import BadRequest
 
 #
 # REFECT TASKS
@@ -268,9 +267,5 @@ async def main_workflow(
 
 
 if __name__ == "__main__":
-    division = "I"
-    tier = "GOLD"
-    start_time = None
-
     # workflow("I", "GOLD", max_players=1)
     asyncio.run(main_workflow(max_players=3))

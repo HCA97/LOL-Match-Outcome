@@ -3,7 +3,6 @@ import os
 import requests
 from prefect_gcp import GcpCredentials
 from requests.adapters import Retry, HTTPAdapter
-
 from prefect.blocks.system import Secret
 
 SESSION = requests.Session()

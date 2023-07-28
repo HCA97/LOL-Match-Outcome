@@ -3,12 +3,11 @@ from typing import Tuple
 
 import config as cfg
 import pandas as pd
-from sklearn.model_selection import train_test_split
-from prefect_gcp.cloud_storage import GcsBucket
-
 from prefect import flow, task
 from prefect.flows import FlowRun
 from prefect.deployments import run_deployment
+from sklearn.model_selection import train_test_split
+from prefect_gcp.cloud_storage import GcsBucket
 
 
 @task(log_prints=True)
@@ -154,14 +153,16 @@ def main(
     train_path = upload_data.submit(
         data_train,
         f'{start_time.strftime("%m-%d-%Y")}-{end_time.strftime("%m-%d-%Y")}/train.csv.gz',
-    ).result()
+    )
     test_path = upload_data.submit(
         data_test,
         f'{start_time.strftime("%m-%d-%Y")}-{end_time.strftime("%m-%d-%Y")}/test.csv.gz',
-    ).result()
+    )
 
-    start_training(train_path, test_path)
+    start_training(train_path.result(), test_path.result())
 
 
 if __name__ == "__main__":
-    main()
+    end_time = dt.datetime.utcnow()
+    start_time = end_time - dt.timedelta(1)
+    main(start_time, end_time)

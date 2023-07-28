@@ -2,9 +2,9 @@ import os
 import itertools
 
 import src
+from prefect import flow
 
 import wandb
-from prefect import flow
 
 
 @flow(name="Train-Classifier", log_prints=True)

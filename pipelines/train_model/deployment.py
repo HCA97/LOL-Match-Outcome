@@ -1,5 +1,4 @@
 from main import train_classifier
-
 from prefect.deployments import Deployment
 from prefect.filesystems import GCS
 

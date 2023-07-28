@@ -1,7 +1,6 @@
 import datetime as dt
 
 from main import main
-
 from prefect.deployments import Deployment
 from prefect.filesystems import GCS
 

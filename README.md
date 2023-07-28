@@ -15,7 +15,7 @@ make test
 ```
 
 ### Prefect Development
- 
+
 ### API Development
 
 ## Deployment
@@ -53,7 +53,7 @@ riot_api_key=${RIOT_API_KEY}
 
 ### 3. Prefect Deployment
 
-> Note: 
+> Note:
 > If you want to skip the data collection path and want to use the public data then you need deploy training pipelines. (`deploy-train-model & deploy-traininig-pipeline`)
 
 To deploy the all the pipelines run:

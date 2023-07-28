@@ -4,9 +4,9 @@ from typing import List
 
 import requests
 from bs4 import BeautifulSoup
+from prefect import task
 
 import wandb
-from prefect import task
 
 
 def get_existing_champs() -> List[str]:
@@ -18,8 +18,8 @@ def get_existing_champs() -> List[str]:
     if req.status_code == 200:
         soup = BeautifulSoup(req.content, "html.parser")
 
-        for a in soup.find_all("a", href=True):
-            href: str = a["href"]
+        for a_ref in soup.find_all("a", href=True):
+            href: str = a_ref["href"]
             if href.startswith("/en-us/champions/"):
                 champ = href[len("/en-us/champions/") : -1].replace("-", "")
                 champs.append(champ)
@@ -47,3 +47,7 @@ def clean_up():
     shutil.rmtree("models", ignore_errors=True)
     shutil.rmtree("artifacts", ignore_errors=True)
     shutil.rmtree("wandb", ignore_errors=True)
+
+
+if __name__ == '__main__':
+    print(get_existing_champs())

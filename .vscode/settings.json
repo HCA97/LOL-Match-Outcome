@@ -1,7 +1,7 @@
 {
     "python.testing.pytestArgs": [
         "api",
-        "prefect"
+        "pipelines"
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,

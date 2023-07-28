@@ -3,7 +3,6 @@ import datetime as dt
 
 import config as cfg
 from google.cloud import storage
-
 from prefect.blocks.system import Secret
 
 # -------------------------- #

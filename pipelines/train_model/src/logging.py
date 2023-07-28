@@ -5,10 +5,10 @@ import numpy as np
 import pandas as pd
 import matplotlib
 import matplotlib.pyplot as plt
+from prefect import task
 from src.utils import dump_pickle, load_pickle
 
 import wandb
-from prefect import task
 
 matplotlib.use("Agg")
 

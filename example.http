@@ -1,7 +1,7 @@
 POST http://127.0.0.1:5000/predict
 Content-Type: application/json
 
-{   
+{
     "tier": "gold",
     "blue_team": ["fiora", "shaco", "ezreal", "twitch", "lulu"],
     "red_team": ["nasus", "masteryi", "ahri", "vayne", "braum"]
@@ -12,7 +12,7 @@ Content-Type: application/json
 POST http://127.0.0.1:5000/predict
 Content-Type: application/json
 
-{   
+{
     "tier": "gold",
     "run_id": "07-18-2023-07-25-2023",
     "blue_team": ["nasus", "masteryi", "ahri", "vayne", "braum"],
@@ -24,10 +24,9 @@ Content-Type: application/json
 POST http://127.0.0.1:5000/predict
 Content-Type: application/json
 
-{   
+{
     "run_id": "07-18-2023-07-25-2023",
     "tier": "silver",
     "blue_team": ["karma", "sion", "leblanc", "vayne", "braum"],
     "red_team": ["fiora", "shaco", "orianna", "twitch", "lulu"]
 }
-

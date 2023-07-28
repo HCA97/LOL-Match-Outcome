@@ -8,9 +8,9 @@ WITH match_latest AS (
         ,  tier
         ,  gameStartTime
         ,  teamId
-    FROM `${project}.${dataset_id}.${table_name}` 
+    FROM `${project}.${dataset_id}.${table_name}`
     WHERE gameStartTime BETWEEN start_date AND end_date
-    QUALIFY ROW_NUMBER() OVER (PARTITION BY matchId, teamPosition, teamId ORDER BY retrieveTime DESC) = 1 
+    QUALIFY ROW_NUMBER() OVER (PARTITION BY matchId, teamPosition, teamId ORDER BY retrieveTime DESC) = 1
 ), blue_team AS (
   SELECT ANY_VALUE(win) as win
       , matchId
@@ -40,11 +40,11 @@ WITH match_latest AS (
        , ANY_VALUE(EXTRACT(HOUR FROM gameStartTime)) AS dayHour
        , ANY_VALUE(EXTRACT(DAYOFWEEK FROM gameStartTime))AS weekDay
        , matchId
-  FROM match_latest 
+  FROM match_latest
   GROUP BY matchId
 )
 
-SELECT 
+SELECT
       ARRAY(SELECT champ FROM UNNEST(b.blue_team) WHERE lane="TOP")[SAFE_OFFSET(0)] AS blue_team_top
     , ARRAY(SELECT champ FROM UNNEST(b.blue_team) WHERE lane="JUNGLE")[SAFE_OFFSET(0)]  AS blue_team_jg
     ,  ARRAY(SELECT champ FROM UNNEST(b.blue_team) WHERE lane="MIDDLE")[SAFE_OFFSET(0)]  AS blue_team_mid
@@ -62,4 +62,3 @@ SELECT
 FROM blue_team AS b
 JOIN red_team AS r ON b.matchId = r.matchId
 JOIN other_info AS o ON b.matchId = o.matchId
-

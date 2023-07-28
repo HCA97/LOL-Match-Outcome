@@ -16,7 +16,7 @@ prefect-setup:
 
 local-setup:
 	pip install -r requirements.txt
-	pre-commit
+	pre-commit install
 
 terraform-setup:
 	cd terraform; terraform init
@@ -24,26 +24,27 @@ terraform-setup:
 setup: local-setup prefect-setup terraform-setup
 
 prefect-blocks:
-	python prefect/blocks.py --sa_path $(sa_path) --riot_api_key $(riot_api_key)
+	python pipelines/blocks.py --sa_path $(sa_path) --riot_api_key $(riot_api_key)
 
 deploy-collect-matches:
-	cd prefect/collect_matches; python deployment.py
+	cd pipelines/collect_matches; python deployment.py
 
 deploy-full-pipeline:
-	cd prefect/full_pipeline; python deployment.py
+	cd pipelines/full_pipeline; python deployment.py
 
 deploy-train-model:
-	cd prefect/train_model; python deployment.py
+	cd pipelines/train_model; python deployment.py
 
 deploy-traininig-pipeline:
-	cd prefect/training_pipeline; python deployment.py
+	cd pipelines/training_pipeline; python deployment.py
 
 deploy-prefect: deploy-collect-matches deploy-train-model deploy-traininig-pipeline deploy-full-pipeline
 
-
-deploy-terraform: terraform-setup check-terraform
+gcloud-auth:
 	gcloud auth login
 	gcloud auth application-default login
+
+deploy-terraform: gcloud-auth terraform-setup check-terraform
 	cd terraform; \
 	terraform apply \
 		-var="project=$(project_id)" \
@@ -54,3 +55,10 @@ deploy-terraform: terraform-setup check-terraform
 
 test-api:
 	python -m pytest api/tests/ --disable-warnings
+
+test-prefect:
+	ln -sf \
+	$(shell pwd)/api/tests/artifacts/data/train_model_data_07-19-2023-07-20-2023_champ_stats.csv.gz \
+	$(shell pwd)/pipelines/tests/data/training_pipeline/champ_stats.csv.gz
+	python -m pytest pipelines/tests/test_train_model.py --disable-warnings
+	python -m pytest pipelines/tests/test_training_pipeline.py --disable-warnings

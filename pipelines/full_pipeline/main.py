@@ -32,5 +32,4 @@ def main(start_time: Optional[dt.datetime] = None, max_players: int = 100):
 
 
 if __name__ == "__main__":
-    max_players = 1
     main(max_players=1)
