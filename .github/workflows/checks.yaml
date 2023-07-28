@@ -51,4 +51,4 @@ jobs:
       - name: Test Pipeline
         run: |-
           pip install -r requirements.txt
-          make test-pipeline
+          make test-prefect

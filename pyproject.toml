@@ -28,3 +28,7 @@ skip-string-normalization = true
 multi_line_output = 3
 length_sort = true
 profile = "black"
+py_version=39
+skip = [".gitignore", ".dockerignore"]
+extend_skip = [".md", ".html", ".csv", ".pkl", ".yaml", ".txt", ".json"]
+extend_skip_glob = ["**/*_test.py", "**/test_*.py"]

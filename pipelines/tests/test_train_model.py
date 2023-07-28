@@ -28,7 +28,7 @@ def test_process_data():
 
 
 with open(DIR / "data/train_model/champs.html", 'r', encoding='utf-8') as ff:
-    content = ff.content()
+    content = ff.read()
 
 
 @patch(
