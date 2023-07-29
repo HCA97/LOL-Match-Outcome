@@ -62,3 +62,5 @@ test-prefect:
 	$(shell pwd)/pipelines/tests/data/training_pipeline/champ_stats.csv.gz
 	python -m pytest pipelines/tests/test_train_model.py --disable-warnings
 	python -m pytest pipelines/tests/test_training_pipeline.py --disable-warnings
+
+test: test-api test-prefect

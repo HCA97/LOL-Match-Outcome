@@ -1,14 +1,18 @@
 # LOL-Match-Outcome
 
+Introducing Match Predictor, an innovative application specifically designed for the European server of League of Legends. As a fellow League of Legends player, I understand the importance of making informed decisions and strategizing effectively. That's why I am developing Match Predictor to enhance the gaming experience for personal and friend usage alike. By leveraging the power of machine learning, this api determines which team will win based on team composition.
 
 ## Setup
 
 We need following tools:
 * gcloud
 * docker
+* terraform
 * python=3.9
 
 ### Test
+
+You can run the tests using:
 
 ```bash
 make test
@@ -16,14 +20,33 @@ make test
 
 ### Prefect Development
 
+You can easly run each prefect locally like you run python code. But before you start running them don't forget to create necessary prefect blocks and deployments.
+
 ### API Development
 
+If you are using vscode you can run the api in the debug mode easly.
+
+> ***Note:**
+> Before you started the api don't forget to login `wandb` and `gcloud`*
+
+> ***Note:**
+> You can find example request in [example.http](example.http). You might need to install [
+REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client)*
+
 ## Deployment
+
+> There are some config parameters you need to update.
+> Please check each `config.py` and determine which variables you want to change.
 
 ### 0. Create Prefect Cloud & GCP Credentials
 
 Create GCP account and project.
-Create Prefect Cloud account and .
+Create Prefect Cloud account and workspace.
+
+
+### 0.1. Leauge of Legends API Key (Optinal)
+
+If you want to run all the pipeline then
 
 ### 1. Terraform Deployment
 
