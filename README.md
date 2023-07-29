@@ -48,7 +48,6 @@ Create a Prefect Cloud account and workspace.
 
 If you want to run all the pipeline then
 
-
 ### 1. Terraform Deployment
 
 Deploy GCP infra:
@@ -78,23 +77,10 @@ riot_api_key=${RIOT_API_KEY}
 
 ### 3. Prefect Deployment
 
-> ***Note:**
-> If you want to skip the data collection path and want to use the public data, then you need to deploy training pipelines. (`deploy-train-model & deploy-training-pipeline`)*
+> Note:
+> If you want to skip the data collection path and want to use the public data, then you need to deploy training pipelines. (`deploy-train-model & deploy-training-pipeline`)
 
 To deploy the all the pipelines run:
 ```bash
 deploy-prefect
 ```
-
-## Dataset
-
-If you don't want to collect your own data you can use data that is collected by me.
-
-```bash
-make create-dataset project_id=${PROJECT_ID}
-```
-
-It will create the `${PROJECT_ID}.datawarehouse.matches` table and uplaod the data from [hugginface](https://huggingface.co/datasets/hca97/LeaugeofLegendRankedMatches)
-
-> ***Note:**
-> Before you upload the dataset you must run `make deploy-terraform` command.*
