@@ -64,3 +64,6 @@ test-prefect:
 	python -m pytest pipelines/tests/test_training_pipeline.py --disable-warnings
 
 test: test-api test-prefect
+
+create-dataset: gcloud-auth
+	python upload_data.py --project_id $(project_id)
